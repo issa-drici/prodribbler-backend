@@ -4,6 +4,7 @@ namespace App\UseCases\Ranking;
 
 use App\Repositories\UserProfile\UserProfileRepositoryInterface;
 use App\Repositories\UserExercise\UserExerciseRepositoryInterface;
+use App\Repositories\File\FileRepositoryInterface;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
@@ -12,7 +13,8 @@ class FindRankingsUseCase
 {
     public function __construct(
         private UserProfileRepositoryInterface $userProfileRepository,
-        private UserExerciseRepositoryInterface $userExerciseRepository
+        private UserExerciseRepositoryInterface $userExerciseRepository,
+        private FileRepositoryInterface $fileRepository
     ) {}
 
     public function execute(string $type = 'week'): array
@@ -35,7 +37,7 @@ class FindRankingsUseCase
              // Récupération de tous les utilisateurs
              $allUsers = $this->userProfileRepository->findAllUsers();
              $userIds = array_column($allUsers, 'user_id');
-             
+
              // Récupération des dates d'exercices pour tous les utilisateurs
              $exerciseDates = $this->userExerciseRepository->findAllUserExerciseDates($userIds, $startDate, $endDate);
 
@@ -43,10 +45,21 @@ class FindRankingsUseCase
              $rankings = array_map(function($user) use ($exerciseDates) {
                  $userStats = $exerciseDates[$user['user_id']] ?? [];
                  $stats = $this->calculateUserStats($userStats['exercises'] ?? []);
-                 
+
+                 // Récupérer l'avatar si présent
+                 $avatarUrl = null;
+                 $userProfile = $this->userProfileRepository->findByUserId($user['user_id']);
+                 if ($userProfile && $userProfile->getAvatarFileId()) {
+                     $avatarFile = $this->fileRepository->findById($userProfile->getAvatarFileId());
+                     if ($avatarFile) {
+                         $avatarUrl = $avatarFile->getUrl();
+                     }
+                 }
+
                  return [
                      'user_id' => $user['user_id'],
                      'full_name' => $user['full_name'],
+                     'avatar_url' => $avatarUrl,
                      'total_xp' => $stats['total_xp'],
                      'streak' => $stats['streak']
                  ];
@@ -63,7 +76,7 @@ class FindRankingsUseCase
         foreach ($rankings as $index => $ranking) {
             $rank = $index + 1;
             $isCurrentUser = $currentUser && $ranking['user_id'] === $currentUser->id;
-            
+
             if ($isCurrentUser) {
                 $currentUserRank = $rank;
             }
@@ -72,6 +85,7 @@ class FindRankingsUseCase
                 'rank' => $rank,
                 'user_id' => $ranking['user_id'],
                 'full_name' => $ranking['full_name'],
+                'avatar_url' => $ranking['avatar_url'],
                 'total_xp' => $ranking['total_xp'],
                 'streak' => $ranking['streak'],
                 'is_current_user' => $isCurrentUser
@@ -98,11 +112,11 @@ class FindRankingsUseCase
         sort($dates);
         $maxStreak = 1;
         $currentStreak = 1;
-        
+
         for ($i = 1; $i < count($dates); $i++) {
             $previousDate = Carbon::parse($dates[$i - 1]);
             $currentDate = Carbon::parse($dates[$i]);
-            
+
             if ($previousDate->addDay()->eq($currentDate)) {
                 $currentStreak++;
                 $maxStreak = max($maxStreak, $currentStreak);
@@ -110,7 +124,7 @@ class FindRankingsUseCase
                 $currentStreak = 1;
             }
         }
-        
+
         return $maxStreak;
     }
 
@@ -140,4 +154,4 @@ class FindRankingsUseCase
             'streak' => $this->calculateMaxStreak($dates)
         ];
     }
-} 
+}
