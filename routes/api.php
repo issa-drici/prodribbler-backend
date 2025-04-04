@@ -8,11 +8,9 @@ use App\Http\Controllers\User\FindUserByIdAction;
 use App\Http\Controllers\Exercise\{
     FindAllExercisesAction,
     FindExerciseByIdAndUserIdAction,
-    CreateExerciseAction,
     FindAllExercisesByLevelIdAndUserIdAction,
     FindAllExercisesByUserIdAction,
-    FindExercisesByLevelIdAction,
-    UpdateExerciseAction
+    FindExercisesByLevelIdAction
 };
 use App\Http\Controllers\UserExercise\{
     CompleteUserExerciseAction,
@@ -31,13 +29,13 @@ use App\Http\Controllers\Ranking\FindRankingsAction;
 use App\Http\Controllers\Profile\{
     FindUserProfileAction,
     UpdateUserGoalsAction,
-    UpdateUserAvatarAction,
-    UpdateUserEmailAction
+    UpdateUserAvatarAction
 };
 use App\Http\Controllers\Support\{
     CreateSupportRequestAction,
     FindAllSupportRequestsAction
 };
+use App\Http\Controllers\Version\VersionCheckAction;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -99,3 +97,6 @@ Route::get('/user/{userId}', FindUserByIdAction::class);
 Route::get('/levels', FindAllLevelsAction::class);
 Route::get('/levels/category/{category}', FindLevelsByCategoryAction::class);
 Route::get('/levels/{id}/exercises', FindExercisesByLevelIdAction::class);
+
+// Version routes
+Route::get('/version-check', VersionCheckAction::class);
