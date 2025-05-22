@@ -14,7 +14,7 @@ use Illuminate\Validation\ValidationException;
 
 class RegisteredUserController extends Controller
 {
-    private const VERIFICATION_CODE = '123456'; // Code statique pour la démonstration
+    private const VERIFICATION_CODE = 'PRO-8X24-UT'; // Code statique pour la démonstration
 
     /**
      * Handle an incoming registration request.
@@ -31,13 +31,13 @@ class RegisteredUserController extends Controller
                 'device_name' => ['required', 'string'],
                 'verification_code' => ['required', 'string', 'size:6'],
             ]);
-            
+
             if ($request->verification_code !== self::VERIFICATION_CODE) {
                 throw ValidationException::withMessages([
                     'verification_code' => ['Le code de vérification est incorrect']
                 ]);
             }
-            
+
             $user = UserModel::create([
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
