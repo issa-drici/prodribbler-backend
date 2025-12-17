@@ -58,7 +58,11 @@ class FindUserStatsUseCase
 
         foreach ($completedExercises as $completed) {
             $exercise = $this->exerciseRepository->findById($completed['exercise_id']);
-            $completedAt = Carbon::parse($completed['completed_at']);
+            
+            // Utiliser updated_at si completed_at est NULL (exercice complété via marge d'erreur)
+            $completedAt = $completed['completed_at'] 
+                ? Carbon::parse($completed['completed_at'])
+                : Carbon::parse($completed['updated_at'] ?? $completed['created_at'] ?? now());
             
             // Cumul des totaux
             $stats['total_xp'] += $exercise->getXpValue();

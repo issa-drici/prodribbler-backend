@@ -29,11 +29,16 @@ class FindExerciseByIdAndUserIdUseCase
         $userExercises = $this->userExerciseRepository->findByUserAndExercise($userId, $exerciseId);
         
         // Calcul du watch_time total et vérification de la complétion
+        // Marge d'erreur de 4 secondes : considérer comme complété si watch_time >= (duration - 4)
+        $toleranceSeconds = 4;
         $totalWatchTime = 0;
         $isCompleted = false;
+        $exerciseDuration = $exercise->getDuration();
+        
         foreach ($userExercises as $userExercise) {
             $totalWatchTime += $userExercise['watch_time'];
-            if (!is_null($userExercise['completed_at'])) {
+            // Considérer comme complété si completed_at existe OU si watch_time >= (duration - 4)
+            if (!is_null($userExercise['completed_at']) || $userExercise['watch_time'] >= ($exerciseDuration - $toleranceSeconds)) {
                 $isCompleted = true;
             }
         }

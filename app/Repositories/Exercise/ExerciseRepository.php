@@ -37,8 +37,13 @@ class ExerciseRepository implements ExerciseRepositoryInterface
 
     public function findCompletedExerciseIds(string $userId): array
     {
-        return UserExerciseModel::where('user_id', $userId)
-            ->whereNotNull('completed_at')
+        // Marge d'erreur de 4 secondes pour considérer un exercice comme complété
+        $tolerance = 4;
+        return UserExerciseModel::select('user_exercises.exercise_id')
+            ->join('exercises', 'user_exercises.exercise_id', '=', 'exercises.id')
+            ->where('user_exercises.user_id', $userId)
+            ->whereRaw("user_exercises.completed_at IS NOT NULL OR (user_exercises.watch_time >= exercises.duration - {$tolerance})")
+            ->distinct()
             ->pluck('exercise_id')
             ->toArray();
     }
@@ -84,5 +89,18 @@ class ExerciseRepository implements ExerciseRepositoryInterface
             ])
             ->get()
             ->toArray();
+    }
+
+    public function update(string $id, array $data): ?Exercise
+    {
+        $model = ExerciseModel::find($id);
+        if (!$model) {
+            return null;
+        }
+
+        $model->fill($data);
+        $model->save();
+
+        return $model->toEntity();
     }
 }

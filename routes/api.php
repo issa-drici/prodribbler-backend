@@ -7,10 +7,12 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\User\FindUserByIdAction;
 use App\Http\Controllers\Exercise\{
     FindAllExercisesAction,
+    FindExerciseByIdAction,
     FindExerciseByIdAndUserIdAction,
     FindAllExercisesByLevelIdAndUserIdAction,
     FindAllExercisesByUserIdAction,
-    FindExercisesByLevelIdAction
+    FindExercisesByLevelIdAction,
+    UpdateExerciseAction
 };
 use App\Http\Controllers\UserExercise\{
     CompleteUserExerciseAction,
@@ -24,7 +26,10 @@ use App\Http\Controllers\Favorite\{
 use App\Http\Controllers\Home\FindHomeDataAction;
 use App\Http\Controllers\Level\FindAllLevelsAction;
 use App\Http\Controllers\Level\FindLevelsByCategoryAction;
-use App\Http\Controllers\Stats\FindUserStatsAction;
+use App\Http\Controllers\Stats\{
+    FindUserStatsAction,
+    FindDashboardOverviewAction
+};
 use App\Http\Controllers\Ranking\FindRankingsAction;
 use App\Http\Controllers\Profile\{
     FindUserProfileAction,
@@ -36,6 +41,7 @@ use App\Http\Controllers\Support\{
     FindAllSupportRequestsAction
 };
 use App\Http\Controllers\User\DeleteUserDataAction;
+use App\Http\Controllers\User\FindAdminUsersAction;
 use App\Http\Controllers\Version\VersionCheckAction;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
@@ -62,8 +68,11 @@ Route::get('/exercises', FindAllExercisesAction::class);
 Route::get('/exercises/user/{userId}', FindAllExercisesByUserIdAction::class);
 Route::get('/exercises/level/{levelId}/user/{userId}', FindAllExercisesByLevelIdAndUserIdAction::class);
 Route::get('/exercises/{exerciseId}/user/{userId}', FindExerciseByIdAndUserIdAction::class);
-// Route::post('/exercises', CreateExerciseAction::class)->middleware('auth:sanctum');
-// Route::put('/exercises/{exerciseId}', UpdateExerciseAction::class)->middleware('auth:sanctum');
+Route::get('/exercises/{id}', FindExerciseByIdAction::class);
+Route::put('/exercises/{id}', UpdateExerciseAction::class)
+    ->middleware(['auth:sanctum', \App\Http\Middleware\EnsureUserIsAdmin::class]);
+// Route::post('/exercises', CreateExerciseAction::class)
+//     ->middleware(['auth:sanctum', \App\Http\Middleware\EnsureUserIsAdmin::class]);
 
 // User Exercise routes
 Route::post('/user-exercises/{exerciseId}/complete', CompleteUserExerciseAction::class)->middleware('auth:sanctum');
@@ -77,8 +86,14 @@ Route::delete('/favorites/exercise/{exerciseId}', DeleteFavoriteAction::class)->
 // Home route
 Route::get('/home', FindHomeDataAction::class)->middleware('auth:sanctum');
 
-// Stats route
+// Stats routes
 Route::get('/user/stats', FindUserStatsAction::class)->middleware('auth:sanctum');
+Route::get('/stats/dashboard/overview', FindDashboardOverviewAction::class)
+    ->middleware(['auth:sanctum', \App\Http\Middleware\EnsureUserIsAdmin::class]);
+
+// Admin routes
+Route::get('/admin/users', FindAdminUsersAction::class)
+    ->middleware(['auth:sanctum', \App\Http\Middleware\EnsureUserIsAdmin::class]);
 
 // Rankings route
 Route::get('/rankings', FindRankingsAction::class)->middleware('auth:sanctum');

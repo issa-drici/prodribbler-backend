@@ -7,17 +7,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Création de la fonction qui compte les vidéos complétées
+        // Création de la fonction qui compte les vidéos complétées (exercices distincts)
+        // Un exercice est considéré comme complété si completed_at IS NOT NULL OU si watch_time >= (duration - 4)
         DB::unprepared('
             CREATE OR REPLACE FUNCTION calculate_completed_videos()
             RETURNS TRIGGER AS $$
             BEGIN
                 UPDATE user_profiles
                 SET completed_videos = (
-                    SELECT COUNT(*)
-                    FROM user_exercises
-                    WHERE user_id = COALESCE(NEW.user_id, OLD.user_id)
-                    AND completed_at IS NOT NULL
+                    SELECT COUNT(DISTINCT ue.exercise_id)
+                    FROM user_exercises ue
+                    JOIN exercises e ON e.id = ue.exercise_id
+                    WHERE ue.user_id = COALESCE(NEW.user_id, OLD.user_id)
+                    AND (ue.completed_at IS NOT NULL OR ue.watch_time >= (e.duration - 4))
                 )
                 WHERE user_id = COALESCE(NEW.user_id, OLD.user_id);
                 
