@@ -16,10 +16,10 @@ class UpdateExerciseAction extends Controller
 
     /**
      * Met à jour les détails d'un exercice
-     * 
+     *
      * @param UpdateExerciseRequest $request
      * @param string $id L'ID de l'exercice à mettre à jour
-     * 
+     *
      * @return JsonResponse
      */
     public function __invoke(UpdateExerciseRequest $request, string $id): JsonResponse
@@ -28,10 +28,10 @@ class UpdateExerciseAction extends Controller
             $result = $this->useCase->execute($id, $request->validated());
             return response()->json($result, 200);
         } catch (ValidationException $e) {
-            $statusCode = $e->errors()['exercise'] ?? null 
+            $statusCode = $e->errors()['exercise'] ?? null
                 ? (str_contains($e->errors()['exercise'][0], 'non trouvé') ? 404 : 422)
                 : 422;
-            
+
             return response()->json([
                 'message' => 'Erreur de validation',
                 'errors' => $e->errors()
@@ -44,4 +44,3 @@ class UpdateExerciseAction extends Controller
         }
     }
 }
-

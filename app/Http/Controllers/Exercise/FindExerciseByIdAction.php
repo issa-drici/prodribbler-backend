@@ -16,10 +16,10 @@ class FindExerciseByIdAction extends Controller
 
     /**
      * Récupère les détails d'un exercice spécifique
-     * 
+     *
      * @param Request $request
      * @param string $id L'ID de l'exercice à récupérer
-     * 
+     *
      * @return JsonResponse
      */
     public function __invoke(Request $request, string $id): JsonResponse
@@ -27,7 +27,7 @@ class FindExerciseByIdAction extends Controller
         try {
             // Récupération optionnelle du user_id depuis les query parameters
             $userId = $request->query('user_id');
-            
+
             $result = $this->useCase->execute($id, $userId);
             return response()->json($result);
         } catch (ValidationException $e) {
@@ -43,4 +43,5 @@ class FindExerciseByIdAction extends Controller
         }
     }
 }
+
 
